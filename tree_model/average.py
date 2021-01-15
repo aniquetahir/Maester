@@ -3,23 +3,23 @@ import numpy as np
 from hyperopt import hp
 from hyperopt import fmin, tpe, hp, STATUS_OK, Trials
 from sklearn.metrics import log_loss
-import cPickle
+import pickle as cPickle
 from score import *
 from xgb_train_cvBodyId import fscore, perfect_score
 
 def load_data():
     
     yuxi = pd.read_csv('predtest_cor2.csv', usecols=['Headline','Body ID','Stance','prob_0','prob_1','prob_2','prob_3'])
-    print 'yuxi.shape:'
-    print yuxi.shape
+    print('yuxi.shape:')
+    print(yuxi.shape)
     
 
     doug = pd.read_csv('dosiblOutput.csv', usecols=['Headline','Body ID','Agree','Disagree','Discuss','Unrelated'])
-    print 'doug.shape:'
-    print doug.shape
+    print('doug.shape:')
+    print(doug.shape)
     combine = pd.merge(yuxi, doug, on=['Headline', 'Body ID'], how='inner')
-    print 'combine.shape:'
-    print combine.shape
+    print('combine.shape:')
+    print(combine.shape)
 
     targets = ['agree', 'disagree', 'discuss', 'unrelated']
     targets_dict = dict(zip(targets, range(len(targets))))
@@ -33,16 +33,16 @@ def load_data():
 def loadTest():
     
     yuxi = pd.read_csv('tree_pred_prob_cor2.csv', usecols=['Headline','Body ID', 'prob_0','prob_1','prob_2','prob_3'])
-    print 'yuxi.shape:'
-    print yuxi.shape
+    print('yuxi.shape:')
+    print(yuxi.shape)
 
     doug = pd.read_csv('dosiblOutputFinal.csv', usecols=['Headline','Body ID','Agree','Disagree','Discuss','Unrelated'])  
-    print 'doug.shape:'
-    print doug.shape
+    print('doug.shape:')
+    print(doug.shape)
 
     combine = pd.concat([yuxi, doug], axis=1)
-    print 'combine.shape:'
-    print combine.shape
+    print('combine.shape:')
+    print(combine.shape)
     
     x_meta = combine[['prob_0','prob_1','prob_2','prob_3','Agree','Disagree','Discuss','Unrelated']].values
 
@@ -63,17 +63,17 @@ def stack_test():
     pred_unrelated = (x_meta[:,3]*param['w0'] + x_meta[:,7]*param['w1']) / sumw
 
     pred_y = np.hstack([pred_agree.reshape((-1,1)), pred_disagree.reshape((-1,1)), pred_discuss.reshape((-1,1)), pred_unrelated.reshape((-1,1))])
-    print 'pred_agree.shape:'
-    print pred_agree.shape
-    print 'pred_disagree.shape:'
-    print pred_disagree.shape
-    print 'pred_discuss.shape:'
-    print pred_discuss.shape
-    print 'pred_unrelated.shape:'
-    print pred_unrelated.shape
+    print('pred_agree.shape:')
+    print(pred_agree.shape)
+    print('pred_disagree.shape:')
+    print(pred_disagree.shape)
+    print('pred_discuss.shape:')
+    print(pred_discuss.shape)
+    print('pred_unrelated.shape:')
+    print(pred_unrelated.shape)
 
-    print 'pred_y.shape:'
-    print pred_y.shape
+    print('pred_y.shape:')
+    print(pred_y.shape)
     pred_y_idx = np.argmax(pred_y, axis=1)
     pred_y_score = np.max(pred_y, axis=1)
     predicted = [LABELS[int(a)] for a in pred_y_idx]
@@ -97,19 +97,19 @@ def stack_cv(param):
     pred_unrelated = (x_meta[:,3]*param['w0'] + x_meta[:,7]*param['w1']) / sumw
 
     pred_y = np.hstack([pred_agree.reshape((-1,1)), pred_disagree.reshape((-1,1)), pred_discuss.reshape((-1,1)), pred_unrelated.reshape((-1,1))])
-    print 'pred_agree.shape:'
-    print pred_agree.shape
-    print 'pred_disagree.shape:'
-    print pred_disagree.shape
-    print 'pred_discuss.shape:'
-    print pred_discuss.shape
-    print 'pred_unrelated.shape:'
-    print pred_unrelated.shape
+    print('pred_agree.shape:')
+    print(pred_agree.shape)
+    print('pred_disagree.shape:')
+    print(pred_disagree.shape)
+    print('pred_discuss.shape:')
+    print(pred_discuss.shape)
+    print('pred_unrelated.shape:')
+    print(pred_unrelated.shape)
 
-    print 'pred_y.shape:'
-    print pred_y.shape
-    print 'y_meta.shape:'
-    print y_meta.shape
+    print('pred_y.shape:')
+    print(pred_y.shape)
+    print('y_meta.shape:')
+    print(y_meta.shape)
     
     pred_y_label = np.argmax(pred_y, axis=1)
     predicted = [LABELS[int(a)] for a in pred_y_label]
@@ -127,12 +127,12 @@ def stack_cv(param):
 
 def hyperopt_wrapper(param):
     
-    print "++++++++++++++++++++++++++++++"
+    print("++++++++++++++++++++++++++++++")
     for k, v in sorted(param.items()):
-        print "%s: %s" % (k,v)
+        print("%s: %s" % (k,v))
 
     loss = stack_cv(param)
-    print "-cost: ", loss
+    print("-cost: ", loss)
 
     return {'loss': loss, 'status': STATUS_OK}
 
@@ -152,13 +152,13 @@ def run():
     best_params = fmin(objective, param_space, algo=tpe.suggest,\
         trials = trials, max_evals=param_space["max_evals"])
     
-    print 'best parameters: '
+    print('best parameters: ')
     for k, v in best_params.items():
-        print "%s: %s" % (k ,v)
+        print("%s: %s" % (k ,v))
     
     trial_loss = np.asarray(trials.losses(), dtype=float)
     best_loss = min(trial_loss)
-    print 'best loss: ', best_loss
+    print('best loss: ', best_loss)
 
 
 if __name__ == '__main__':

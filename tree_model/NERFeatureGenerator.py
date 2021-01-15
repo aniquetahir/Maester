@@ -1,7 +1,7 @@
 from FeatureGenerator import *
 import pandas as pd
 import numpy as np
-import cPickle
+import pickle as cPickle
 import spacy
 from helpers import *
 import math
@@ -12,18 +12,18 @@ class NERFeatureGenerator(FeatureGenerator):
 
     def process(self, df):
 
-        print 'generating NER features'
-        print 'for headline'
+        print('generating NER features')
+        print('for headline')
 
         n_train = df[~df['target'].isnull()].shape[0]
         n_test = df[df['target'].isnull()].shape[0]
 
         # calculate the polarity score of each sentence then take the averagetext
         # df['headline_sents'] = df['Headline'].apply(lambda x: sent_tokenize(x.decode('utf-8')))
-        nlp = spacy.load('en')
+        nlp = spacy.load('en_core_web_md')
 
         def process_ents(x):
-            ents = nlp(unicode(x)).ents
+            ents = nlp(x).ents
             rst = []
             for ent in ents:
                 rst.append(ent.text.lower().replace(" ", ""))
@@ -197,14 +197,14 @@ class NERFeatureGenerator(FeatureGenerator):
         headlineNer = df[['naive_ner', 'idf_ner', 'tfidf_ner', 'logtfidf_ner']].values
 
 
-        print 'headlineNer.shape:'
-        print headlineNer.shape
+        print('headlineNer.shape:')
+        print(headlineNer.shape)
 
         headlineNerTrain = headlineNer[:n_train, :]
         outfilename_ner_train = "train.headline.ner.pkl"
         with open(outfilename_ner_train, "wb") as outfile:
             cPickle.dump(headlineNerTrain, outfile, -1)
-        print 'headline NER features of training set saved in %s' % outfilename_ner_train
+        print('headline NER features of training set saved in %s' % outfilename_ner_train)
 
         if n_test > 0:
             # test set is available
@@ -212,9 +212,9 @@ class NERFeatureGenerator(FeatureGenerator):
             outfilename_ner_test = "test.headline.ner.pkl"
             with open(outfilename_ner_test, "wb") as outfile:
                 cPickle.dump(headlineNerTest, outfile, -1)
-            print 'headline NER features of test set saved in %s' % outfilename_ner_test
+            print('headline NER features of test set saved in %s' % outfilename_ner_test)
 
-        print 'headine ner done'
+        print('headine ner done')
         return 1
 
     def read(self, header='train'):
@@ -223,8 +223,8 @@ class NERFeatureGenerator(FeatureGenerator):
         with open(filename_ner, "rb") as infile:
             headlineNer = cPickle.load(infile)
 
-        print 'headlineNer.shape:'
-        print headlineNer.shape
+        print('headlineNer.shape:')
+        print(headlineNer.shape)
 
         return [headlineNer]
 

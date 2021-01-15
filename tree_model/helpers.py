@@ -3,6 +3,7 @@ import numpy as np
 import nltk
 from sklearn.metrics.pairwise import cosine_similarity
 
+nltk.download('stopwords')
 english_stemmer = nltk.stem.SnowballStemmer('english')
 token_pattern = r"(?u)\b\w\w+\b"
 stopwords = set(nltk.corpus.stopwords.words('english'))
@@ -19,7 +20,7 @@ def preprocess_data(line,
                     token_pattern=token_pattern,
                     exclude_stopword=True,
                     stem=True):
-    token_pattern = re.compile(token_pattern, flags = re.UNICODE | re.LOCALE)
+    token_pattern = re.compile(token_pattern, flags = re.UNICODE)
     tokens = [x.lower() for x in token_pattern.findall(line)]
     tokens_stemmed = tokens
     if stem:
@@ -46,8 +47,8 @@ def cosine_sim(x, y):
         d = cosine_similarity(x, y)
         d = d[0][0]
     except:
-        print x
-        print y
+        print(x)
+        print(y)
         d = 0.
     return d
 

@@ -1,7 +1,7 @@
 import ngram
 import pandas as pd
 import numpy as np
-import cPickle
+import pickle as cPickle
 from helpers import *
 from CountFeatureGenerator import *
 from TfidfFeatureGenerator import *
@@ -21,9 +21,9 @@ def process():
         train = pd.merge(stances_train, body_train, how='left', on='Body ID')
         targets = ['agree', 'disagree', 'discuss', 'unrelated']
         targets_dict = dict(zip(targets, range(len(targets))))
-        train['target'] = map(lambda x: targets_dict[x], train['Stance'])
-        print 'train.shape:'
-        print train.shape
+        train['target'] = train['Stance'].map(lambda x: targets_dict[x])
+        print('train.shape:')
+        print(train.shape)
         n_train = train.shape[0]
 
         data = train
@@ -36,48 +36,50 @@ def process():
             test = pd.merge(headline_test, body_test, how="left", on="Body ID")
 
             data = pd.concat((train, test))  # target = NaN for test set
-            print data
-            print 'data.shape:'
-            print data.shape
+            print(data)
+            print('data.shape:')
+            print(data.shape)
 
             train = data[~data['target'].isnull()]
-            print train
-            print 'train.shape:'
-            print train.shape
+            print(train)
+            print('train.shape:')
+            print(train.shape)
 
             test = data[data['target'].isnull()]
-            print test
-            print 'test.shape:'
-            print test.shape
+            print(test)
+            print('test.shape:')
+            print(test.shape)
 
-        # data = data.iloc[:100, :]
-
+        # data = data.iloc[:100, :]()
         # return 1
 
-        print "generate unigram"
+        # data = data.head(100)
+        print("generate unigram")
         data["Headline_unigram"] = data["Headline"].map(lambda x: preprocess_data(x))
         data["articleBody_unigram"] = data["articleBody"].map(lambda x: preprocess_data(x))
 
-        print "generate bigram"
+        print("generate bigram")
         join_str = "_"
         data["Headline_bigram"] = data["Headline_unigram"].map(lambda x: ngram.getBigram(x, join_str))
         data["articleBody_bigram"] = data["articleBody_unigram"].map(lambda x: ngram.getBigram(x, join_str))
 
-        print "generate trigram"
+        print("generate trigram")
         join_str = "_"
         data["Headline_trigram"] = data["Headline_unigram"].map(lambda x: ngram.getTrigram(x, join_str))
         data["articleBody_trigram"] = data["articleBody_unigram"].map(lambda x: ngram.getTrigram(x, join_str))
 
+        print(data.head())
+        # data.to_pickle('data.pkl')
         with open('data.pkl', 'wb') as outfile:
-            cPickle.dump(data, outfile, -1)
-            print 'dataframe saved in data.pkl'
+            cPickle.dump(data, outfile)
+        print('dataframe saved in data.pkl')
 
     else:
         with open('data.pkl', 'rb') as infile:
             data = cPickle.load(infile)
-            print 'data loaded'
-            print 'data.shape:'
-            print data.shape
+            print('data loaded')
+            print('data.shape:')
+            print(data.shape)
     # return 1
 
     # define feature generators
@@ -103,7 +105,7 @@ def process():
     # for g in generators:
     #    g.read('test')
 
-    print 'done'
+    print('done')
 
 
 if __name__ == "__main__":

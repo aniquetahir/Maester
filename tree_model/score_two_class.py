@@ -85,10 +85,10 @@ def score_submission(gold_labels, test_labels):
             score += 0.25
 
         # cm[LABELS.index(g_stance)][LABELS.index(t_stance)] += 1
-    print "count: " + str(count)
-    print "related count: " + str(count_related)
-    print "accuracy for total: " + str(acc / float(count))
-    print "accuracy for related: " + str(acc_for_related / float(count_related))
+    print("count: " + str(count))
+    print("related count: " + str(count_related))
+    print("accuracy for total: " + str(acc / float(count)))
+    print("accuracy for related: " + str(acc_for_related / float(count_related)))
 
     return score, 0
 

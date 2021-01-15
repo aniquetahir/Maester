@@ -1,10 +1,12 @@
 from FeatureGenerator import *
 import ngram
-import cPickle
+import pickle as cPickle
 import pandas as pd
+import nltk
 from nltk.tokenize import sent_tokenize
 from helpers import *
 import hashlib
+nltk.download('punkt')
 
 
 class CountFeatureGenerator(FeatureGenerator):
@@ -18,7 +20,7 @@ class CountFeatureGenerator(FeatureGenerator):
 
         grams = ["unigram", "bigram", "trigram"]
         feat_names = ["Headline", "articleBody"]
-        print "generate counting features"
+        print("generate counting features")
         for feat_name in feat_names:
             for gram in grams:
                 df["count_of_%s_%s" % (feat_name, gram)] = list(df.apply(lambda x: len(x[feat_name + "_" + gram]), axis=1))
@@ -107,33 +109,33 @@ class CountFeatureGenerator(FeatureGenerator):
         #nh_dict = df.groupby(['Body ID'])['headline_hash'].nunique().to_dict()
         #df['n_headlines'] = df['Body ID'].map(lambda x: nh_dict[x])
         #feat_names.append('n_headlines')
-        print 'BasicCountFeatures:'
-        print df
+        print('BasicCountFeatures:')
+        print(df)
         
         # split into train, test portion and save in separate files
         train = df[~df['target'].isnull()]
-        print 'train:'
-        print train[['Headline_unigram','Body ID', 'count_of_Headline_unigram']]
+        print('train:')
+        print(train[['Headline_unigram','Body ID', 'count_of_Headline_unigram']])
         xBasicCountsTrain = train[feat_names].values
         outfilename_bcf_train = "train.basic.pkl"
         with open(outfilename_bcf_train, "wb") as outfile:
             cPickle.dump(feat_names, outfile, -1)
             cPickle.dump(xBasicCountsTrain, outfile, -1)
-        print 'basic counting features for training saved in %s' % outfilename_bcf_train
+        print('basic counting features for training saved in %s' % outfilename_bcf_train)
         
         test = df[df['target'].isnull()]
-        print 'test:'
-        print test[['Headline_unigram','Body ID', 'count_of_Headline_unigram']]
+        print('test:')
+        print(test[['Headline_unigram','Body ID', 'count_of_Headline_unigram']])
         #return 1
         if test.shape[0] > 0:
             # test set exists
-            print 'saving test set'
+            print('saving test set')
             xBasicCountsTest = test[feat_names].values
             outfilename_bcf_test = "test.basic.pkl"
             with open(outfilename_bcf_test, 'wb') as outfile:
                 cPickle.dump(feat_names, outfile, -1)
                 cPickle.dump(xBasicCountsTest, outfile, -1)
-                print 'basic counting features for test saved in %s' % outfilename_bcf_test
+                print('basic counting features for test saved in %s' % outfilename_bcf_test)
 
         return 1
 
@@ -144,10 +146,10 @@ class CountFeatureGenerator(FeatureGenerator):
         with open(filename_bcf, "rb") as infile:
             feat_names = cPickle.load(infile)
             xBasicCounts = cPickle.load(infile)
-            print 'feature names: '
-            print feat_names
-            print 'xBasicCounts.shape:'
-            print xBasicCounts.shape
+            print('feature names: ')
+            print(feat_names)
+            print('xBasicCounts.shape:')
+            print(xBasicCounts.shape)
             #print type(xBasicCounts)
 
         return [xBasicCounts]
