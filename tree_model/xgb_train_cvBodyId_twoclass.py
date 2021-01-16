@@ -52,7 +52,7 @@ def build_data():
 #    targets = ['agree', 'disagree', 'discuss', 'unrelated']
 #    targets_dict = dict(zip(targets, range(len(targets))))
     targets_dict = {'agree':1, 'disagree':1, 'discuss':1, 'unrelated':0}
-    data['target'] = map(lambda x: targets_dict[x], data['Stance'])
+    data['target'] = list(map(lambda x: targets_dict[x], data['Stance']))
     
     data_y = data['target'].values
 

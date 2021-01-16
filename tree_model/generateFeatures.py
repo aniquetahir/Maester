@@ -12,7 +12,7 @@ from NERFeatureGenerator import *
 # from AlignmentFeatureGenerator import *
 
 def process():
-    read = False
+    read = True
     if not read:
 
         body_train = pd.read_csv("train_bodies_processed.csv", encoding='utf-8')

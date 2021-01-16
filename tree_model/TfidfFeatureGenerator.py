@@ -119,7 +119,7 @@ class TfidfFeatureGenerator(FeatureGenerator):
         #print type(simTfidf)
 
         return [xHeadlineTfidf, xBodyTfidf, simTfidf.reshape(-1, 1)]
-#        return [simTfidf.reshape(-1, 1)]
+        #return [simTfidf.reshape(-1, 1)]
 
  #   Copyright 2017 Cisco Systems, Inc.
  #  
