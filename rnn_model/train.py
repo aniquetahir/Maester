@@ -13,7 +13,7 @@ def main(_):
             "num_epoch": 20,
             "batch_size": 30,
             "threshold": 0.5,
-            "train": True,
+            "train": False,
             "seed": 150
     }
     

@@ -577,9 +577,9 @@ class AttentionWrapper(rnn_cell_impl.RNNCell):
       name: Name to use when creating ops.
     """
     super(AttentionWrapper, self).__init__(name=name)
-    if not rnn_cell_impl._like_rnncell(cell):  # pylint: disable=protected-access
-      raise TypeError(
-          "cell must be an RNNCell, saw type: %s" % type(cell).__name__)
+    # if not rnn_cell_impl._like_rnncell(cell):  # pylint: disable=protected-access
+    #   raise TypeError(
+    #       "cell must be an RNNCell, saw type: %s" % type(cell).__name__)
     if not isinstance(attention_mechanism, AttentionMechanism):
       raise TypeError(
           "attention_mechanism must be a AttentionMechanism, saw type: %s"

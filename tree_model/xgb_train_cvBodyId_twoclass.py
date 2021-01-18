@@ -59,7 +59,7 @@ def build_data():
     # read features
     generators = [
                   CountFeatureGenerator(),
-                  TfidfFeatureGenerator(),
+                  TfidfFtXGBoost(),
                   SvdFeatureGenerator(),
                   Word2VecFeatureGenerator(),
                   NERFeatureGenerator()
@@ -102,7 +102,7 @@ def build_test_data():
     # read features
     generators = [
                   CountFeatureGenerator(),
-                  TfidfFeatureGenerator(),
+                  TfidfFtXGBoost(),
                   SvdFeatureGenerator(),
                   Word2VecFeatureGenerator(),
                   NERFeatureGenerator()

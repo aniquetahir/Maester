@@ -7,13 +7,142 @@ from nltk.tokenize import sent_tokenize
 from helpers import *
 import hashlib
 nltk.download('punkt')
+from pyspark import SparkContext, RDD
+from pyspark.sql import SparkSession, DataFrame
 
+
+
+
+
+def add_columns(dictionary, cm, df:RDD):
+    df.zip()
 
 class CountFeatureGenerator(FeatureGenerator):
 
 
     def __init__(self, name='countFeatureGenerator'):
         super(CountFeatureGenerator, self).__init__(name)
+
+
+    def process_query(self, df:RDD):
+        grams = ["unigram", "bigram", "trigram"]
+        feat_names = ["Headline", "articleBody"]
+        print("generate counting features")
+        features = []
+
+        CM = {
+            'Headline': 0,
+            'Body ID': 1,
+            'articleBody': 2,
+            'Headline_unigram': 3,
+            'articleBody_unigram': 4,
+            'Headline_bigram': 5,
+            'articleBody_bigram': 6,
+            'Headline_trigram': 7,
+            'articleBody_trigram': 8
+        }
+        cm_index = 8
+        for feat_name in feat_names:
+            for gram in grams:
+                features.append("count_of_%s_%s" % (feat_name, gram))
+                cm_index += 1
+                CM[features[-1]] = cm_index
+                df = df.map(lambda x: x + [len(x[CM[feat_name+'_'+gram]])])
+                features.append("count_of_unique_%s_%s" % (feat_name, gram))
+                cm_index += 1
+                CM[features[-1]] = cm_index
+                df = df.map(lambda x: x+ [len(set(x[CM[feat_name+'_'+gram]]))])
+                features.append("ratio_of_unique_%s_%s" % (feat_name, gram))
+                cm_index += 1
+                CM[features[-1]] = cm_index
+                df = df.map(lambda x: x + [try_divide(x[CM["count_of_unique_%s_%s"%(feat_name,gram)]], x[CM["count_of_%s_%s"%(feat_name,gram)]])])
+                df.cache()
+
+        # overlapping n-grams count
+        for gram in grams:
+            cm_index += 1
+            CM["count_of_Headline_%s_in_articleBody" % gram] = cm_index
+            df = df.map(lambda x: x + [sum([1. for w in x[CM["Headline_" + gram]] if w in set(x[CM["articleBody_" + gram]])])])
+            cm_index += 1
+            CM["ratio_of_Headline_%s_in_articleBody" % gram] = cm_index
+            df = df.map(lambda x: x + [try_divide(x[CM["count_of_Headline_%s_in_articleBody" % gram]], x[CM["count_of_Headline_%s" % gram]])])
+            df.cache()
+
+        # number of sentences in headline and body
+        for feat_name in feat_names:
+            #df['len_sent_%s' % feat_name] = df[feat_name].apply(lambda x: len(sent_tokenize(x.decode('utf-8').encode('ascii', errors='ignore'))))
+            cm_index += 1
+            CM['len_sent_%s' % feat_name] = cm_index
+            df.map(lambda x: x + [len(sent_tokenize(x[CM[feat_name]]))])
+            df.cache()
+            # df[feat_name].apply(lambda x: len(sent_tokenize(x)))
+            #print df['len_sent_%s' % feat_name]
+
+        # dump the basic counting features into a file
+        columns = [x[0] for x in sorted(CM.items(), key=lambda x:x[1])]
+        feat_names = [ n for n in columns \
+                if "count" in n \
+                or "ratio" in n \
+                or "len_sent" in n]
+
+        # binary refuting features
+        _refuting_words = [
+            'fake',
+            'fraud',
+            'hoax',
+            'false',
+            'deny', 'denies',
+            # 'refute',
+            'not',
+            'despite',
+            'nope',
+            'doubt', 'doubts',
+            'bogus',
+            'debunk',
+            'pranks',
+            'retract'
+        ]
+
+        _hedging_seed_words = [
+            'alleged', 'allegedly',
+            'apparently',
+            'appear', 'appears',
+            'claim', 'claims',
+            'could',
+            'evidently',
+            'largely',
+            'likely',
+            'mainly',
+            'may', 'maybe', 'might',
+            'mostly',
+            'perhaps',
+            'presumably',
+            'probably',
+            'purported', 'purportedly',
+            'reported', 'reportedly',
+            'rumor', 'rumour', 'rumors', 'rumours', 'rumored', 'rumoured',
+            'says',
+            'seem',
+            'somewhat',
+            # 'supposedly',
+            'unconfirmed'
+        ]
+
+        #df['refuting_words_in_headline'] = df['Headline'].map(lambda x: 1 if w in x else 0 for w in _refuting_words)
+        #df['hedging_words_in_headline'] = df['Headline'].map(lambda x: 1 if w in x else 0 for w in _refuting_words)
+        #check_words = _refuting_words + _hedging_seed_words
+        check_words = _refuting_words
+        for rf in check_words:
+            fname = '%s_exist' % rf
+            feat_names.append(fname)
+            cm_index += 1
+            CM[fname] = cm_index
+            df = df.map(lambda x: x + [ 1 if rf in x[CM['Headline']] else 0 ])
+            df.cache()
+            # df[fname] = df['Headline'].map(lambda x: 1 if rf in x else 0)
+
+
+        return df
 
 
     def process(self, df):
@@ -153,6 +282,16 @@ class CountFeatureGenerator(FeatureGenerator):
             #print type(xBasicCounts)
 
         return [xBasicCounts]
+
+
+    def read_query(self):
+        t = ['train', 'test']
+        basic_counts = []
+        for typ in t:
+            basic_counts.append(self.read(typ))
+        return basic_counts
+
+
 
 if __name__ == '__main__':
 
