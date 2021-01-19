@@ -14,7 +14,6 @@ class SvdFeatureGenerator(FeatureGenerator):
     def __init__(self, name='svdFeatureGenerator'):
         super(SvdFeatureGenerator, self).__init__(name)
 
-
     def process_query(self, df:RDD, tfid_features):
 
         # n_train = df[~df['target'].isnull()].shape[0]

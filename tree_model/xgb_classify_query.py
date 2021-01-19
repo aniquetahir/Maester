@@ -64,6 +64,10 @@ def get_related_articles(query):
     train_incremented.createOrReplaceTempView('train_bods')
 
     all_bodies = ss.sql('select * from test_bods union distinct (select * from train_bods)')
+    all_bodies.createOrReplaceTempView('all_bods')
+    print(all_bodies.count())
+    all_bodies = ss.sql('select max(`Body ID`) as `Body ID`, articleBody from all_bods group by articleBody limit 100')
+    print(all_bodies.count())
     # get rdd from all_bodies
     bodies_rdd = all_bodies.rdd.map(list)
     bodies_rdd = bodies_rdd.map(lambda x: [query, x[0], x[1], query_unigram, preprocess_data(x[1])])
@@ -71,20 +75,34 @@ def get_related_articles(query):
                                           [query_bigram, ngram.getBigram(x[4],'_'),
                                           query_trigram, ngram.getTrigram(x[4],'_')])
 
-    cfg = CountFeatureGenerator()
-    cfg.process_query(bodies_rdd)
+    # cfg = CountFeatureGenerator()
+    # cfg.process_query(bodies_rdd)
 
+    features = []
+    gen = CountFeatureGenerator()
+    features.append(gen.process_query(bodies_rdd))
+    tfid_features = TfidfFtXGBoost().process_query(bodies_rdd)
+    features.append(tfid_features)
+    features.append(SvdFeatureGenerator().process_query(bodies_rdd, tfid_features))
+    features.append(Word2VecFeatureGenerator().process_query(bodies_rdd))
+    features.append(NERFeatureGenerator().process_query(bodies_rdd, sc))
 
+    new_feats = []
+    for f in features:
+        for g in f:
+            new_feats.append(g)
 
-    generators = [
-        CountFeatureGenerator(),
-        TfidfFtXGBoost(),
-        SvdFeatureGenerator(),
-        Word2VecFeatureGenerator(),
-        NERFeatureGenerator()
-    ]
+    features = new_feats
 
-    features = [f for g in generators for f in g.read("test")]
+    # generators = [
+    #     CountFeatureGenerator(),
+    #     TfidfFtXGBoost(),
+    #     SvdFeatureGenerator(),
+    #     Word2VecFeatureGenerator(),
+    #     NERFeatureGenerator()
+    # ]
+    #
+    # features = [f for g in generators for f in g.read("test")]
     print(len(features))
 
     np.hstack(features)

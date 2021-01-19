@@ -85,6 +85,12 @@ class CountFeatureGenerator(FeatureGenerator):
                 or "ratio" in n \
                 or "len_sent" in n]
 
+        feat_indices = [ i for i, n in enumerate(columns) \
+                       if "count" in n \
+                       or "ratio" in n \
+                       or "len_sent" in n]
+
+
         # binary refuting features
         _refuting_words = [
             'fake',
@@ -141,8 +147,8 @@ class CountFeatureGenerator(FeatureGenerator):
             df.cache()
             # df[fname] = df['Headline'].map(lambda x: 1 if rf in x else 0)
 
-
-        return df
+        include_indices = []
+        return df.map(lambda x: [y for i, y in enumerate(x) if i in feat_indices]).collect()
 
 
     def process(self, df):
